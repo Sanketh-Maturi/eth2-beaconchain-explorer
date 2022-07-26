@@ -1156,7 +1156,20 @@ func ValidatorSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msgForHashing := "\x19Ethereum Signed Message:\n" + strconv.Itoa(len(signatureWrapper.Msg)) + signatureWrapper.Msg
+	if signatureWrapper.Version == "3" {
+		byteSignedMessage, err := hex.DecodeString(strings.Replace(signatureWrapper.Msg, "0x", "", -1))
+		if err != nil {
+			logger.Errorf("error parsing submitted hex message %v: %v", signatureWrapper.Msg, err)
+			utils.SetFlash(w, r, validatorEditFlash, "Error: the provided signature is invalid")
+			http.Redirect(w, r, "/validator/"+pubkey, 301)
+			return
+		}
+		signedMessage := string(byteSignedMessage)
+	} else {
+		signedMessage := signatureWrapper.Msg
+	}
+
+	msgForHashing := "\x19Ethereum Signed Message:\n" + strconv.Itoa(len(signedMessage)) + signedMessage
 	msgHash := crypto.Keccak256Hash([]byte(msgForHashing))
 
 	signatureParsed, err := hex.DecodeString(strings.Replace(signatureWrapper.Sig, "0x", "", -1))
