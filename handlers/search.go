@@ -43,6 +43,8 @@ func Search(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/validator/"+search, http.StatusMovedPermanently)
 	} else if utils.IsValidEth1Address(search) {
 		http.Redirect(w, r, "/address/"+search, http.StatusMovedPermanently)
+	} else if utils.IsENSDomainPresent(search) {
+		http.Redirect(w, r, "/address/"+strings.Replace(utils.GetENSAddress(search), "0x", "", -1), http.StatusMovedPermanently)
 	} else {
 		w.Header().Set("Content-Type", "text/html")
 		data := InitPageData(w, r, "search", "/search", "")
